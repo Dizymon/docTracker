@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} - DocTracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ title }}</h1>
+    <p class="page-kicker">Capture the document details, ownership, dates, and files.</p>
+  </div>
+  <a href="{% url 'document_list' %}" class="btn btn-secondary">Back</a>
+</div>
+
+<div class="card form-card">
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div class="form-group">
+      <label>Title *</label>{{ form.title }}
+      {% if form.title.errors %}<ul class="errorlist">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+    </div>
+
+    <div class="form-group">
+      <label>Description</label>{{ form.description }}
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>Category</label>{{ form.category }}</div>
+      <div class="form-group"><label>Status</label>{{ form.status }}</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>Assigned To</label>{{ form.assigned_to }}</div>
+      <div class="form-group"><label>Due Date</label>{{ form.due_date }}</div>
+    </div>
+
+    <div class="form-group">
+      <label>Tags</label>{{ form.tags }}
+      {% if form.tags.help_text %}<small class="form-help">{{ form.tags.help_text }}</small>{% endif %}
+    </div>
+
+    <div class="form-group"><label>Attach File</label>{{ form.file }}</div>
+
+    <div class="actions mt-3">
+      <button type="submit" class="btn btn-primary">Save Document</button>
+      {% if doc %}<a href="{% url 'document_detail' doc.pk %}" class="btn btn-secondary">Cancel</a>{% endif %}
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title %}Delete Document - DocTracker{% endblock %}
+{% block content %}
+<div class="card danger-card">
+  <h2>Confirm Delete</h2>
+  <p>Are you sure you want to delete <strong>"{{ doc.title }}"</strong>? This action cannot be undone.</p>
+  <div class="actions mt-3">
+    <form method="post">{% csrf_token %}
+      <button type="submit" class="btn btn-danger">Yes, Delete</button>
+    </form>
+    <a href="{% url 'document_detail' doc.pk %}" class="btn btn-secondary">Cancel</a>
+  </div>
+</div>
+{% endblock %}

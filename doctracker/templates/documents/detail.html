@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% block title %}{{ doc.title }} - DocTracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>{{ doc.title }}</h1>
+    <p class="page-kicker">Document details, attachment, comments, and status history.</p>
+  </div>
+  <div class="actions">
+    <a href="{% url 'document_edit' doc.pk %}" class="btn btn-primary">Edit</a>
+    <a href="{% url 'document_delete' doc.pk %}" class="btn btn-danger">Delete</a>
+    <a href="{% url 'document_list' %}" class="btn btn-secondary">Back</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="document-meta-line">
+    <span class="badge badge-{{ doc.status }}" style="font-size:12px;">{{ doc.get_status_display }}</span>
+    {% if doc.category %}<span class="text-muted">Category: {{ doc.category.name }}</span>{% endif %}
+    {% if doc.due_date %}<span class="text-muted">Due: {{ doc.due_date|date:"M d, Y" }}</span>{% endif %}
+  </div>
+
+  {% if doc.description %}
+  <p class="document-description">{{ doc.description }}</p>
+  {% endif %}
+
+  <div class="detail-meta">
+    <div class="meta-item">
+      <div class="meta-label">Created By</div>
+      <div class="meta-value">{{ doc.created_by.username|default:"-" }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Assigned To</div>
+      <div class="meta-value">{{ doc.assigned_to.username|default:"-" }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Created</div>
+      <div class="meta-value">{{ doc.created_at|date:"M d, Y H:i" }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Last Updated</div>
+      <div class="meta-value">{{ doc.updated_at|date:"M d, Y H:i" }}</div>
+    </div>
+  </div>
+
+  {% if doc.get_tags_list %}
+  <div class="mt-3">
+    {% for tag in doc.get_tags_list %}<span class="tag">{{ tag }}</span>{% endfor %}
+  </div>
+  {% endif %}
+
+  {% if doc.file %}
+  <div class="mt-3">
+    <strong>Attached File:</strong> <a href="{{ doc.file.url }}" target="_blank">{{ doc.file.name|cut:"documents/" }}</a>
+  </div>
+  {% endif %}
+</div>
+
+<div class="detail-grid">
+  <div class="card">
+    <h2>Comments ({{ comments.count }})</h2>
+    {% for comment in comments %}
+    <div class="comment">
+      <div class="comment-meta">{{ comment.author.username }} - {{ comment.created_at|date:"M d, Y H:i" }}</div>
+      <div class="comment-text">{{ comment.text }}</div>
+    </div>
+    {% empty %}
+    <p class="text-muted" style="font-size:13px;">No comments yet.</p>
+    {% endfor %}
+    <div class="mt-3">
+      <form method="post">
+        {% csrf_token %}
+        {{ comment_form.text }}
+        <button type="submit" class="btn btn-primary btn-sm mt-2">Add Comment</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>History</h2>
+    {% for h in history %}
+    <div class="history-item">
+      <span>{{ h.timestamp|date:"M d H:i" }}</span>
+      <span><strong>{{ h.changed_by.username|default:"?" }}</strong> - {{ h.change_note }}</span>
+    </div>
+    {% empty %}
+    <p class="text-muted" style="font-size:13px;">No history yet.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

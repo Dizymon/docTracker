@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard - DocTracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="page-kicker">Track document volume, ownership, and recent movement.</p>
+  </div>
+  <a href="{% url 'document_create' %}" class="btn btn-primary">+ New Document</a>
+</div>
+
+<div class="stats-grid">
+  <div class="stat"><div class="num">{{ stats.total }}</div><div class="label">Total</div></div>
+  <div class="stat"><div class="num" style="color:#475569">{{ stats.draft }}</div><div class="label">Draft</div></div>
+  <div class="stat"><div class="num" style="color:#854d0e">{{ stats.review }}</div><div class="label">In Review</div></div>
+  <div class="stat"><div class="num" style="color:#166534">{{ stats.approved }}</div><div class="label">Approved</div></div>
+  <div class="stat"><div class="num" style="color:#6b7280">{{ stats.archived }}</div><div class="label">Archived</div></div>
+  <div class="stat"><div class="num" style="color:#2563eb">{{ stats.my_docs }}</div><div class="label">My Docs</div></div>
+  <div class="stat"><div class="num" style="color:#7c3aed">{{ stats.assigned_to_me }}</div><div class="label">Assigned to Me</div></div>
+</div>
+
+<div class="card flush">
+  <div style="padding:22px 22px 0;">
+  <h2>Recent Activity</h2>
+  </div>
+  {% if recent %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Title</th><th>Status</th><th>Category</th><th>Assigned To</th><th>Updated</th><th></th>
+    </tr></thead>
+    <tbody>
+    {% for doc in recent %}
+    <tr>
+      <td><a href="{% url 'document_detail' doc.pk %}">{{ doc.title }}</a></td>
+      <td><span class="badge badge-{{ doc.status }}">{{ doc.get_status_display }}</span></td>
+      <td>{{ doc.category.name|default:"-" }}</td>
+      <td>{{ doc.assigned_to.username|default:"-" }}</td>
+      <td class="text-muted">{{ doc.updated_at|date:"M d, Y" }}</td>
+      <td><a href="{% url 'document_edit' doc.pk %}" class="btn btn-secondary btn-sm">Edit</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">No documents yet. <a href="{% url 'document_create' %}">Create one!</a></div>
+  {% endif %}
+</div>
+{% endblock %}

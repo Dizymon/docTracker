@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Categories - DocTracker{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Categories</h1>
+    <p class="page-kicker">Organize documents by office, purpose, or process type.</p>
+  </div>
+</div>
+
+<div class="category-grid">
+  <div class="card flush">
+    {% if categories %}
+    <div class="table-wrap">
+    <table>
+      <thead><tr><th>Name</th><th>Documents</th><th>Description</th><th></th></tr></thead>
+      <tbody>
+      {% for cat in categories %}
+      <tr>
+        <td><strong>{{ cat.name }}</strong></td>
+        <td><span class="badge badge-draft">{{ cat.doc_count }}</span></td>
+        <td class="text-muted">{{ cat.description|truncatechars:80|default:"-" }}</td>
+        <td class="text-right">
+          <form method="post" action="{% url 'category_delete' cat.pk %}" style="display:inline;" onsubmit="return confirm('Delete this category?')">
+            {% csrf_token %}<button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    {% else %}
+    <div class="empty">No categories yet.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Add Category</h2>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+      <div class="form-group"><label>{{ field.label }}</label>{{ field }}</div>
+      {% endfor %}
+      <button type="submit" class="btn btn-primary btn-block">Add Category</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
