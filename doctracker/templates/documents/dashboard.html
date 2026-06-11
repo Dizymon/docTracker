@@ -37,7 +37,11 @@
       <td>{{ doc.category.name|default:"-" }}</td>
       <td>{{ doc.assigned_to.username|default:"-" }}</td>
       <td class="text-muted">{{ doc.updated_at|date:"M d, Y" }}</td>
-      <td><a href="{% url 'document_edit' doc.pk %}" class="btn btn-secondary btn-sm">Edit</a></td>
+      <td>
+        {% if doc.can_manage %}
+        <a href="{% url 'document_edit' doc.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+        {% endif %}
+      </td>
     </tr>
     {% endfor %}
     </tbody>

@@ -8,6 +8,17 @@ from .models import Document, Category, DocumentHistory, Comment
 from .forms import DocumentForm, CategoryForm, CommentForm, DocumentFilterForm
 
 
+def can_manage_document(user, document):
+    return user.is_staff or user.is_superuser or document.created_by_id == user.id
+
+
+def get_manageable_document_or_404(request, pk):
+    docs = Document.objects.all()
+    if not request.user.is_staff and not request.user.is_superuser:
+        docs = docs.filter(created_by=request.user)
+    return get_object_or_404(docs, pk=pk)
+
+
 def login_view(request):
     if request.user.is_authenticated:
         return redirect('dashboard')
@@ -52,7 +63,9 @@ def dashboard(request):
         'my_docs': docs.filter(created_by=request.user).count(),
         'assigned_to_me': docs.filter(assigned_to=request.user).count(),
     }
-    recent = docs.order_by('-updated_at')[:8]
+    recent = list(docs.order_by('-updated_at')[:8])
+    for doc in recent:
+        doc.can_manage = can_manage_document(request.user, doc)
     return render(request, 'documents/dashboard.html', {'stats': stats, 'recent': recent})
 
 
@@ -71,7 +84,12 @@ def document_list(request):
         if u := form.cleaned_data.get('assigned_to'):
             docs = docs.filter(assigned_to=u)
 
-    return render(request, 'documents/list.html', {'docs': docs, 'form': form, 'count': docs.count()})
+    count = docs.count()
+    docs = list(docs)
+    for doc in docs:
+        doc.can_manage = can_manage_document(request.user, doc)
+
+    return render(request, 'documents/list.html', {'docs': docs, 'form': form, 'count': count})
 
 
 @login_required
@@ -108,6 +126,7 @@ def document_detail(request, pk):
             return redirect('document_detail', pk=pk)
     return render(request, 'documents/detail.html', {
         'doc': doc,
+        'can_manage_doc': can_manage_document(request.user, doc),
         'comment_form': comment_form,
         'history': doc.history.select_related('changed_by').all(),
         'comments': doc.comments.select_related('author').all(),
@@ -116,7 +135,7 @@ def document_detail(request, pk):
 
 @login_required
 def document_edit(request, pk):
-    doc = get_object_or_404(Document, pk=pk)
+    doc = get_manageable_document_or_404(request, pk)
     old_status = doc.status
     if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES, instance=doc)
@@ -138,7 +157,7 @@ def document_edit(request, pk):
 
 @login_required
 def document_delete(request, pk):
-    doc = get_object_or_404(Document, pk=pk)
+    doc = get_manageable_document_or_404(request, pk)
     if request.method == 'POST':
         doc.delete()
         messages.success(request, 'Document deleted.')

@@ -45,10 +45,12 @@
     <td>{{ doc.due_date|date:"M d"|default:"-" }}</td>
     <td class="text-muted">{{ doc.updated_at|date:"M d, Y" }}</td>
     <td class="text-right">
+      {% if doc.can_manage %}
       <div class="actions" style="justify-content:flex-end;">
         <a href="{% url 'document_edit' doc.pk %}" class="btn btn-secondary btn-sm">Edit</a>
         <a href="{% url 'document_delete' doc.pk %}" class="btn btn-danger btn-sm">Delete</a>
       </div>
+      {% endif %}
     </td>
   </tr>
   {% endfor %}

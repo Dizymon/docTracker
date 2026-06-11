@@ -7,8 +7,10 @@
     <p class="page-kicker">Document details, attachment, comments, and status history.</p>
   </div>
   <div class="actions">
+    {% if can_manage_doc %}
     <a href="{% url 'document_edit' doc.pk %}" class="btn btn-primary">Edit</a>
     <a href="{% url 'document_delete' doc.pk %}" class="btn btn-danger">Delete</a>
+    {% endif %}
     <a href="{% url 'document_list' %}" class="btn btn-secondary">Back</a>
   </div>
 </div>
