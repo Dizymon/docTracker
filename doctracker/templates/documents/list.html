@@ -3,16 +3,22 @@
 {% block content %}
 <div class="page-header">
   <div>
-    <h1>Documents <span class="text-muted" style="font-size:16px; font-weight:600;">{{ count }}</span></h1>
+    <h1>Documents <span id="document-count" class="text-muted" style="font-size:16px; font-weight:600;">{{ count }}</span></h1>
     <p class="page-kicker">Search, filter, and manage your document records.</p>
   </div>
   <a href="{% url 'document_create' %}" class="btn btn-primary">+ New Document</a>
 </div>
 
-<form method="get">
+<form method="get"
+      hx-get="{% url 'document_list' %}"
+      hx-target="#document-results"
+      hx-swap="outerHTML"
+      hx-push-url="true"
+      hx-trigger="keyup changed delay:250ms from:input, change from:select, submit"
+      hx-indicator="#document-filter-indicator">
   <div class="filter-bar">
     <div class="form-group">
-      <label>Search</label>{{ form.search }}
+      <label>Search Files</label>{{ form.search }}
     </div>
     <div class="form-group"><label>Status</label>{{ form.status }}</div>
     <div class="form-group"><label>Category</label>{{ form.category }}</div>
@@ -24,41 +30,5 @@
   </div>
 </form>
 
-<div class="card flush">
-{% if docs %}
-<div class="table-wrap">
-<table>
-  <thead><tr>
-    <th>Title</th><th>Status</th><th>Category</th><th>Tags</th><th>Assigned</th><th>Due</th><th>Updated</th><th></th>
-  </tr></thead>
-  <tbody>
-  {% for doc in docs %}
-  <tr>
-    <td>
-      <a href="{% url 'document_detail' doc.pk %}"><strong>{{ doc.title }}</strong></a>
-      {% if doc.description %}<br><small class="text-muted">{{ doc.description|truncatechars:70 }}</small>{% endif %}
-    </td>
-    <td><span class="badge badge-{{ doc.status }}">{{ doc.get_status_display }}</span></td>
-    <td>{{ doc.category.name|default:"-" }}</td>
-    <td>{% for tag in doc.get_tags_list %}<span class="tag">{{ tag }}</span>{% empty %}-{% endfor %}</td>
-    <td>{{ doc.assigned_to.username|default:"-" }}</td>
-    <td>{{ doc.due_date|date:"M d"|default:"-" }}</td>
-    <td class="text-muted">{{ doc.updated_at|date:"M d, Y" }}</td>
-    <td class="text-right">
-      {% if doc.can_manage %}
-      <div class="actions" style="justify-content:flex-end;">
-        <a href="{% url 'document_edit' doc.pk %}" class="btn btn-secondary btn-sm">Edit</a>
-        <a href="{% url 'document_delete' doc.pk %}" class="btn btn-danger btn-sm">Delete</a>
-      </div>
-      {% endif %}
-    </td>
-  </tr>
-  {% endfor %}
-  </tbody>
-</table>
-</div>
-{% else %}
-<div class="empty">No documents found.</div>
-{% endif %}
-</div>
+{% include 'documents/_document_results.html' %}
 {% endblock %}

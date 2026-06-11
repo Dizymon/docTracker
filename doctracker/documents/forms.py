@@ -40,7 +40,7 @@ class CommentForm(forms.ModelForm):
 
 
 class DocumentFilterForm(forms.Form):
-    search = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': 'Search documents...'}))
+    search = forms.CharField(required=False, widget=forms.TextInput(attrs={'placeholder': 'Search title, tags, or file name...'}))
     status = forms.ChoiceField(required=False, choices=[('', 'All Statuses')] + Document.STATUS_CHOICES)
     category = forms.ModelChoiceField(required=False, queryset=Category.objects.all(), empty_label="All Categories")
     assigned_to = forms.ModelChoiceField(required=False, queryset=User.objects.all(), empty_label="All Users")

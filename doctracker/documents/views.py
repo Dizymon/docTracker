@@ -8,8 +8,16 @@ from .models import Document, Category, DocumentHistory, Comment
 from .forms import DocumentForm, CategoryForm, CommentForm, DocumentFilterForm
 
 
+def is_htmx(request):
+    return request.headers.get('HX-Request') == 'true'
+
+
 def can_manage_document(user, document):
     return user.is_staff or user.is_superuser or document.created_by_id == user.id
+
+
+def can_manage_categories(user):
+    return user.is_staff or user.is_superuser
 
 
 def get_manageable_document_or_404(request, pk):
@@ -17,6 +25,10 @@ def get_manageable_document_or_404(request, pk):
     if not request.user.is_staff and not request.user.is_superuser:
         docs = docs.filter(created_by=request.user)
     return get_object_or_404(docs, pk=pk)
+
+
+def get_categories():
+    return Category.objects.annotate(doc_count=Count('document')).order_by('name')
 
 
 def login_view(request):
@@ -76,7 +88,12 @@ def document_list(request):
 
     if form.is_valid():
         if q := form.cleaned_data.get('search'):
-            docs = docs.filter(Q(title__icontains=q) | Q(description__icontains=q) | Q(tags__icontains=q))
+            docs = docs.filter(
+                Q(title__icontains=q) |
+                Q(description__icontains=q) |
+                Q(tags__icontains=q) |
+                Q(file__icontains=q)
+            )
         if s := form.cleaned_data.get('status'):
             docs = docs.filter(status=s)
         if c := form.cleaned_data.get('category'):
@@ -89,7 +106,13 @@ def document_list(request):
     for doc in docs:
         doc.can_manage = can_manage_document(request.user, doc)
 
-    return render(request, 'documents/list.html', {'docs': docs, 'form': form, 'count': count})
+    template = 'documents/_document_results.html' if is_htmx(request) else 'documents/list.html'
+    return render(request, template, {
+        'docs': docs,
+        'form': form,
+        'count': count,
+        'include_oob_count': is_htmx(request),
+    })
 
 
 @login_required
@@ -115,6 +138,7 @@ def document_create(request):
 def document_detail(request, pk):
     doc = get_object_or_404(Document, pk=pk)
     comment_form = CommentForm()
+    comment_added = False
     if request.method == 'POST':
         comment_form = CommentForm(request.POST)
         if comment_form.is_valid():
@@ -122,15 +146,23 @@ def document_detail(request, pk):
             c.document = doc
             c.author = request.user
             c.save()
-            messages.success(request, 'Comment added.')
-            return redirect('document_detail', pk=pk)
-    return render(request, 'documents/detail.html', {
+            if is_htmx(request):
+                comment_form = CommentForm()
+                comment_added = True
+            else:
+                messages.success(request, 'Comment added.')
+                return redirect('document_detail', pk=pk)
+    comments = doc.comments.select_related('author').all()
+    context = {
         'doc': doc,
         'can_manage_doc': can_manage_document(request.user, doc),
         'comment_form': comment_form,
         'history': doc.history.select_related('changed_by').all(),
-        'comments': doc.comments.select_related('author').all(),
-    })
+        'comments': comments,
+        'comment_added': comment_added,
+    }
+    template = 'documents/_comments_panel.html' if is_htmx(request) and request.method == 'POST' else 'documents/detail.html'
+    return render(request, template, context)
 
 
 @login_required
@@ -167,21 +199,57 @@ def document_delete(request, pk):
 
 @login_required
 def category_list(request):
-    categories = Category.objects.annotate(doc_count=Count('document')).order_by('name')
+    categories = get_categories()
     form = CategoryForm()
+    category_added = False
+    category_error = ''
     if request.method == 'POST':
-        form = CategoryForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Category added.')
-            return redirect('category_list')
-    return render(request, 'documents/categories.html', {'categories': categories, 'form': form})
+        if can_manage_categories(request.user):
+            form = CategoryForm(request.POST)
+            if form.is_valid():
+                form.save()
+                categories = get_categories()
+                if is_htmx(request):
+                    form = CategoryForm()
+                    category_added = True
+                else:
+                    messages.success(request, 'Category added.')
+                    return redirect('category_list')
+        else:
+            category_error = 'Only admins can manage categories.'
+            if not is_htmx(request):
+                messages.error(request, category_error)
+                return redirect('category_list')
+    template = 'documents/_category_grid.html' if is_htmx(request) else 'documents/categories.html'
+    return render(request, template, {
+        'categories': categories,
+        'form': form,
+        'category_added': category_added,
+        'category_error': category_error,
+        'can_manage_categories': can_manage_categories(request.user),
+    })
 
 
 @login_required
 def category_delete(request, pk):
     cat = get_object_or_404(Category, pk=pk)
     if request.method == 'POST':
+        if not can_manage_categories(request.user):
+            if is_htmx(request):
+                return render(request, 'documents/_category_grid.html', {
+                    'categories': get_categories(),
+                    'form': CategoryForm(),
+                    'category_error': 'Only admins can manage categories.',
+                    'can_manage_categories': False,
+                })
+            messages.error(request, 'Only admins can manage categories.')
+            return redirect('category_list')
         cat.delete()
+        if is_htmx(request):
+            return render(request, 'documents/_category_grid.html', {
+                'categories': get_categories(),
+                'form': CategoryForm(),
+                'can_manage_categories': can_manage_categories(request.user),
+            })
         messages.success(request, 'Category deleted.')
     return redirect('category_list')

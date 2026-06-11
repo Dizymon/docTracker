@@ -1,0 +1,44 @@
+{% if include_oob_count %}
+<span id="document-count" hx-swap-oob="true">{{ count }}</span>
+{% endif %}
+<div id="document-results" class="card flush fade-in">
+  <div class="table-status">
+    <span><strong class="result-count">{{ count }}</strong> document{{ count|pluralize }} found</span>
+    <span id="document-filter-indicator" class="htmx-indicator is-loading">Updating</span>
+  </div>
+  {% if docs %}
+  <div class="table-wrap">
+  <table>
+    <thead><tr>
+      <th>Title</th><th>Status</th><th>Category</th><th>Tags</th><th>Assigned</th><th>Due</th><th>Updated</th><th></th>
+    </tr></thead>
+    <tbody>
+    {% for doc in docs %}
+    <tr>
+      <td>
+        <a href="{% url 'document_detail' doc.pk %}"><strong>{{ doc.title }}</strong></a>
+        {% if doc.description %}<br><small class="text-muted">{{ doc.description|truncatechars:70 }}</small>{% endif %}
+      </td>
+      <td><span class="badge badge-{{ doc.status }}">{{ doc.get_status_display }}</span></td>
+      <td>{{ doc.category.name|default:"-" }}</td>
+      <td>{% for tag in doc.get_tags_list %}<span class="tag">{{ tag }}</span>{% empty %}-{% endfor %}</td>
+      <td>{{ doc.assigned_to.username|default:"-" }}</td>
+      <td>{{ doc.due_date|date:"M d"|default:"-" }}</td>
+      <td class="text-muted">{{ doc.updated_at|date:"M d, Y" }}</td>
+      <td class="text-right">
+        {% if doc.can_manage %}
+        <div class="actions" style="justify-content:flex-end;">
+          <a href="{% url 'document_edit' doc.pk %}" class="btn btn-secondary btn-sm">Edit</a>
+          <a href="{% url 'document_delete' doc.pk %}" class="btn btn-danger btn-sm">Delete</a>
+        </div>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  </div>
+  {% else %}
+  <div class="empty">No documents found.</div>
+  {% endif %}
+</div>
