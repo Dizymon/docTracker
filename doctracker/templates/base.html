@@ -161,6 +161,8 @@
     min-height: 24px;
     padding: 3px 9px;
     border-radius: 999px;
+    background: #eef1f0;
+    color: #52625e;
     font-size: 11px;
     font-weight: 800;
     text-transform: uppercase;
@@ -171,6 +173,13 @@
   .badge-review   { background: var(--accent-soft); color: #8a5a17; }
   .badge-approved { background: #dff7ea; color: #146c40; }
   .badge-archived { background: #eef1f0; color: #6a7774; }
+  .badge-low { background: #e9f0ee; color: #52625e; }
+  .badge-normal { background: #e3f6f1; color: #0f766e; }
+  .badge-high { background: #fff1d6; color: #8a5a17; }
+  .badge-urgent { background: #fee2e2; color: #991b1b; }
+  .deadline-alert { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+  .deadline-overdue { background: #fee2e2; color: #991b1b; }
+  .deadline-soon { background: #fff1d6; color: #8a5a17; }
 
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; min-width: 760px; }
@@ -251,7 +260,7 @@
     padding: 16px;
     margin-bottom: 16px;
     display: grid;
-    grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(150px, 1fr)) auto;
+    grid-template-columns: minmax(220px, 2fr) repeat(auto-fit, minmax(140px, 1fr));
     gap: 12px;
     align-items: end;
   }
@@ -344,7 +353,7 @@
   <a href="{% url 'document_list' %}">Documents</a>
   <a href="{% url 'category_list' %}">Categories</a>
   <span class="spacer"></span>
-  <span class="user">{{ user.username }}</span>
+  <span class="user">{{ user.username }}{% if user.profile %} · {{ user.profile.get_role_display }}{% endif %}</span>
   <a href="{% url 'logout' %}">Logout</a>
 </nav>
 {% endif %}

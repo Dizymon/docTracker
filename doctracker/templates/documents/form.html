@@ -23,12 +23,29 @@
 
     <div class="form-row">
       <div class="form-group"><label>Category</label>{{ form.category }}</div>
-      <div class="form-group"><label>Status</label>{{ form.status }}</div>
+      <div class="form-group">
+        <label>Status</label>{{ form.status }}
+        {% if form.status.help_text %}<small class="form-help">{{ form.status.help_text }}</small>{% endif %}
+        <div class="mt-2">
+          <label>Custom Status</label>{{ form.custom_status }}
+          {% if form.custom_status.errors %}<ul class="errorlist">{% for e in form.custom_status.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          {% if form.custom_status.help_text %}<small class="form-help">{{ form.custom_status.help_text }}</small>{% endif %}
+        </div>
+      </div>
     </div>
 
     <div class="form-row">
+      <div class="form-group"><label>Priority</label>{{ form.priority }}</div>
       <div class="form-group"><label>Assigned To</label>{{ form.assigned_to }}</div>
+    </div>
+
+    <div class="form-row">
       <div class="form-group"><label>Due Date</label>{{ form.due_date }}</div>
+      <div class="form-group">
+        <label>Status / Approval Comment</label>{{ form.status_note }}
+        {% if form.status_note.errors %}<ul class="errorlist">{% for e in form.status_note.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+        {% if form.status_note.help_text %}<small class="form-help">{{ form.status_note.help_text }}</small>{% endif %}
+      </div>
     </div>
 
     <div class="form-group">

@@ -17,30 +17,45 @@
   <div class="stat"><div class="num" style="color:#6a7774">{{ stats.archived }}</div><div class="label">Archived</div></div>
   <div class="stat"><div class="num" style="color:#0f766e">{{ stats.my_docs }}</div><div class="label">My Docs</div></div>
   <div class="stat"><div class="num" style="color:#c0842d">{{ stats.assigned_to_me }}</div><div class="label">Assigned to Me</div></div>
+  <div class="stat"><div class="num" style="color:#991b1b">{{ stats.overdue }}</div><div class="label">Overdue</div></div>
+  <div class="stat"><div class="num" style="color:#8a5a17">{{ stats.due_soon }}</div><div class="label">Due Soon</div></div>
+  <div class="stat"><div class="num" style="color:#991b1b">{{ stats.high_priority }}</div><div class="label">High Priority</div></div>
 </div>
 
 <div class="card flush">
   <div style="padding:22px 22px 0;">
-  <h2>Recent Activity</h2>
+  <div class="actions" style="justify-content:space-between; align-items:flex-start;">
+    <h2>Recent Activity</h2>
+    <div class="actions">
+      <a class="btn btn-secondary btn-sm" href="{% url 'dashboard' %}">All</a>
+      <a class="btn btn-secondary btn-sm" href="{% url 'dashboard' %}?filter=assigned">Assigned</a>
+      <a class="btn btn-secondary btn-sm" href="{% url 'dashboard' %}?filter=overdue">Overdue</a>
+      <a class="btn btn-secondary btn-sm" href="{% url 'dashboard' %}?filter=soon">Due Soon</a>
+      <a class="btn btn-secondary btn-sm" href="{% url 'dashboard' %}?filter=priority">Priority</a>
+    </div>
+  </div>
   </div>
   {% if recent %}
   <div class="table-wrap">
   <table>
     <thead><tr>
-      <th>Title</th><th>Status</th><th>Category</th><th>Assigned To</th><th>Updated</th><th></th>
+      <th>Title</th><th>Status</th><th>Priority</th><th>Category</th><th>Assigned To</th><th>Due</th><th>Updated</th><th></th>
     </tr></thead>
     <tbody>
     {% for doc in recent %}
     <tr>
       <td><a href="{% url 'document_detail' doc.pk %}">{{ doc.title }}</a></td>
-      <td><span class="badge badge-{{ doc.status }}">{{ doc.get_status_display }}</span></td>
+      <td><span class="badge badge-{{ doc.status_badge_class }}">{{ doc.get_status_display }}</span></td>
+      <td><span class="badge badge-{{ doc.priority }}">{{ doc.get_priority_display }}</span></td>
       <td>{{ doc.category.name|default:"-" }}</td>
       <td>{{ doc.assigned_to.username|default:"-" }}</td>
+      <td>
+        {{ doc.due_date|date:"M d"|default:"-" }}
+        {% if doc.is_overdue %}<br><span class="deadline-alert deadline-overdue">Overdue</span>{% elif doc.is_due_soon %}<br><span class="deadline-alert deadline-soon">Due Soon</span>{% endif %}
+      </td>
       <td class="text-muted">{{ doc.updated_at|date:"M d, Y" }}</td>
       <td>
-        {% if doc.can_manage %}
-        <a href="{% url 'document_edit' doc.pk %}" class="btn btn-secondary btn-sm">Edit</a>
-        {% endif %}
+        &ndash;
       </td>
     </tr>
     {% endfor %}

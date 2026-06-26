@@ -10,7 +10,7 @@
   <div class="table-wrap">
   <table>
     <thead><tr>
-      <th>Title</th><th>Status</th><th>Category</th><th>Tags</th><th>Assigned</th><th>Due</th><th>Updated</th><th></th>
+      <th>Title</th><th>Status</th><th>Priority</th><th>Category</th><th>Tags</th><th>Assigned</th><th>Due</th><th>Updated</th><th></th>
     </tr></thead>
     <tbody>
     {% for doc in docs %}
@@ -19,11 +19,15 @@
         <a href="{% url 'document_detail' doc.pk %}"><strong>{{ doc.title }}</strong></a>
         {% if doc.description %}<br><small class="text-muted">{{ doc.description|truncatechars:70 }}</small>{% endif %}
       </td>
-      <td><span class="badge badge-{{ doc.status }}">{{ doc.get_status_display }}</span></td>
+      <td><span class="badge badge-{{ doc.status_badge_class }}">{{ doc.get_status_display }}</span></td>
+      <td><span class="badge badge-{{ doc.priority }}">{{ doc.get_priority_display }}</span></td>
       <td>{{ doc.category.name|default:"-" }}</td>
       <td>{% for tag in doc.get_tags_list %}<span class="tag">{{ tag }}</span>{% empty %}-{% endfor %}</td>
       <td>{{ doc.assigned_to.username|default:"-" }}</td>
-      <td>{{ doc.due_date|date:"M d"|default:"-" }}</td>
+      <td>
+        {{ doc.due_date|date:"M d"|default:"-" }}
+        {% if doc.is_overdue %}<br><span class="deadline-alert deadline-overdue">Overdue</span>{% elif doc.is_due_soon %}<br><span class="deadline-alert deadline-soon">Due Soon</span>{% endif %}
+      </td>
       <td class="text-muted">{{ doc.updated_at|date:"M d, Y" }}</td>
       <td class="text-right">
         {% if doc.can_manage %}

@@ -17,9 +17,11 @@
 
 <div class="card">
   <div class="document-meta-line">
-    <span class="badge badge-{{ doc.status }}" style="font-size:12px;">{{ doc.get_status_display }}</span>
+    <span class="badge badge-{{ doc.status_badge_class }}" style="font-size:12px;">{{ doc.get_status_display }}</span>
+    <span class="badge badge-{{ doc.priority }}" style="font-size:12px;">{{ doc.get_priority_display }}</span>
     {% if doc.category %}<span class="text-muted">Category: {{ doc.category.name }}</span>{% endif %}
     {% if doc.due_date %}<span class="text-muted">Due: {{ doc.due_date|date:"M d, Y" }}</span>{% endif %}
+    {% if doc.is_overdue %}<span class="deadline-alert deadline-overdue">Overdue</span>{% elif doc.is_due_soon %}<span class="deadline-alert deadline-soon">Due Soon</span>{% endif %}
   </div>
 
   {% if doc.description %}
@@ -34,6 +36,10 @@
     <div class="meta-item">
       <div class="meta-label">Assigned To</div>
       <div class="meta-value">{{ doc.assigned_to.username|default:"-" }}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Priority</div>
+      <div class="meta-value">{{ doc.get_priority_display }}</div>
     </div>
     <div class="meta-item">
       <div class="meta-label">Created</div>
@@ -62,15 +68,38 @@
   {% include 'documents/_comments_panel.html' %}
 
   <div class="card">
-    <h2>History</h2>
+    <h2>Activity Timeline</h2>
     {% for h in history %}
     <div class="history-item">
       <span>{{ h.timestamp|date:"M d H:i" }}</span>
-      <span><strong>{{ h.changed_by.username|default:"?" }}</strong> - {{ h.change_note }}</span>
+      <span><strong>{{ h.changed_by.username|default:"?" }}</strong> - {{ h.get_change_type_display }}<br>{{ h.change_note }}</span>
     </div>
     {% empty %}
     <p class="text-muted" style="font-size:13px;">No history yet.</p>
     {% endfor %}
   </div>
+</div>
+
+<div class="card">
+  <h2>File Versions</h2>
+  {% if file_versions %}
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>File</th><th>Uploaded By</th><th>Uploaded</th><th>Note</th></tr></thead>
+      <tbody>
+      {% for version in file_versions %}
+      <tr>
+        <td><a href="{{ version.file.url }}" target="_blank">{{ version.file.name|cut:"documents/versions/"|cut:"documents/" }}</a></td>
+        <td>{{ version.uploaded_by.username|default:"-" }}</td>
+        <td class="text-muted">{{ version.uploaded_at|date:"M d, Y H:i" }}</td>
+        <td>{{ version.note|default:"-" }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="text-muted" style="font-size:13px;">No file versions yet.</p>
+  {% endif %}
 </div>
 {% endblock %}
